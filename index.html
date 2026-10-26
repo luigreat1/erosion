@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Эрозия почвы: Интерактивный урок</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            oswald: ['Oswald', 'sans-serif'],
+            sans: ['Roboto', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              green: '#2e7d32',
+              lightGreen: '#4caf50',
+              blue: '#0288d1',
+              sky: '#e0f2fe',
+              amber: '#f59e0b',
+              soil: '#8d5b4c'
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      background: linear-gradient(135deg, #f4f7f6 0%, #e6f0ed 50%, #e0f2fe 100%);
+      font-family: 'Oswald', sans-serif;
+      min-height: 100vh;
+      color: #1e293b;
+      overflow-x: hidden;
+    }
+
+    .light-card {
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(226, 232, 240, 0.8);
+      box-shadow: 0 20px 40px -15px rgba(14, 165, 233, 0.12), 0 10px 25px -10px rgba(0, 0, 0, 0.05);
+    }
+
+    .light-pill {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+    }
+
+    input[type=range] {
+      -webkit-appearance: none;
+      background: #cbd5e1;
+      height: 8px;
+      border-radius: 4px;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      height: 22px;
+      width: 22px;
+      border-radius: 50%;
+      background: #0288d1;
+      box-shadow: 0 2px 8px rgba(2, 136, 209, 0.4);
+      cursor: pointer;
+      transition: transform 0.1s;
+    }
+    input[type=range]::-webkit-slider-thumb:hover {
+      transform: scale(1.15);
+    }
+
+    canvas {
+      border-radius: 1rem;
+      box-shadow: inset 0 0 12px rgba(0,0,0,0.08), 0 4px 12px rgba(0,0,0,0.05);
+      touch-action: none;
+      display: block;
+    }
+
+    .btn-sky {
+      background: linear-gradient(135deg, #0288d1 0%, #0369a1 100%);
+      color: #ffffff;
+      box-shadow: 0 4px 14px rgba(2, 136, 209, 0.3);
+    }
+    .btn-sky:hover {
+      background: linear-gradient(135deg, #0369a1 0%, #075985 100%);
+    }
+
+    .btn-amber {
+      background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+      color: #ffffff;
+      box-shadow: 0 4px 14px rgba(245, 158, 11, 0.3);
+    }
+
+    .btn-emerald {
+      background: linear-gradient(135deg, #2e7d32 0%, #1b5e20 100%);
+      color: #ffffff;
+      box-shadow: 0 4px 14px rgba(46, 125, 50, 0.3);
+    }
+
+    .nav-tab {
+      padding: 0.75rem 1.5rem;
+      border-radius: 9999px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      transition: all 0.2s ease;
+      cursor: pointer;
+      border: 1px solid transparent;
+    }
+    .nav-tab.active {
+      background: #0288d1;
+      color: white;
+      box-shadow: 0 4px 12px rgba(2, 136, 209, 0.3);
+    }
+    .nav-tab:not(.active) {
+      color: #475569;
+      background: #f1f5f9;
+      border-color: #e2e8f0;
+    }
+    .nav-tab:not(.active):hover {
+      background: #e2e8f0;
+    }
+
+    .page-section {
+      display: none;
+      animation: fadeIn 0.4s ease;
+    }
+    .page-section.active {
+      display: block;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .real-image-placeholder {
+      background: #cbd5e1;
+      border-radius: 1rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      color: #64748b;
+      font-family: 'Roboto', sans-serif;
+      text-align: center;
+      padding: 2rem;
+      border: 2px dashed #94a3b8;
+      position: relative;
+      overflow: hidden;
+    }
+    .real-image-placeholder img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      position: absolute;
+      top: 0;
+      left: 0;
+      opacity: 0.85;
+    }
+    .real-image-placeholder .placeholder-text {
+      position: relative;
+      z-index: 10;
+      background: rgba(255,255,255,0.85);
+      padding: 0.5rem 1rem;
+      border-radius: 0.5rem;
+      font-size: 0.85rem;
+    }
+  </style>
+</head>
+<body class="p-3 md:p-6 flex flex-col items-center min-h-screen">
+
+  <div class="light-card max-w-6xl w-full rounded-3xl p-4 md:p-8 my-auto relative overflow-hidden">
+    
+    <div class="absolute -top-24 -left-24 w-96 h-96 bg-sky-200/40 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="absolute -bottom-24 -right-24 w-96 h-96 bg-emerald-200/40 rounded-full blur-3xl pointer-events-none"></div>
+
+    <!-- Navigation -->
+    <nav class="flex flex-wrap justify-center gap-2 mb-6 relative z-10">
+      <button class="nav-tab active" data-target="page-title">Титульный</button>
+      <button class="nav-tab" data-target="page-water">Водная эрозия</button>
+      <button class="nav-tab" data-target="page-wind">Ветровая эрозия</button>
+      <button class="nav-tab" data-target="page-lab">Лаборатория</button>
+    </nav>
+
+    <!-- ================= PAGE 1: TITLE ================= -->
+    <section id="page-title" class="page-section active">
+      <div class="text-center mb-8 relative z-10">
+        <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-sky-50 border border-sky-200 text-sky-700 text-sm font-semibold tracking-widest uppercase mb-2">
+          <span>🌍</span> Наука о Земле
+        </div>
+        <h1 class="font-oswald text-4xl md:text-6xl font-bold uppercase tracking-wide text-slate-800 leading-tight">
+          Эрозия: <span class="text-brand-blue">Разрушение и снос почвы</span>
+        </h1>
+        <p class="font-sans text-slate-600 text-lg md:text-xl mt-4 max-w-3xl mx-auto font-normal">
+          Разрушение почвы водой и ветром называется <strong class="text-brand-blue">эрозия</strong> (от латинского <em>erosio</em> — «разъедание»).
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 items-center relative z-10">
+        <div class="light-pill p-6 rounded-3xl flex flex-col items-center text-center relative overflow-hidden">
+          <div class="w-full h-64 md:h-80 bg-sky-100 rounded-2xl flex items-center justify-center relative mb-4 border-2 border-sky-200 overflow-hidden">
+             <img src="lui1.png" alt="Персонаж с картой эрозии" class="w-full h-full object-cover">
+             <div class="absolute bottom-2 right-2 bg-white/90 px-3 py-1 rounded-lg text-xs font-sans text-slate-500 shadow">
+               Место для вашей картинки
+             </div>
+          </div>
+          <h3 class="font-oswald text-xl font-semibold text-slate-800 uppercase tracking-wider">Почвенный патруль</h3>
+          <p class="font-sans text-slate-500 text-sm mt-1">Изучаем масштабы бедствия</p>
+        </div>
+
+        <div class="space-y-4">
+          <div class="light-pill p-5 rounded-2xl border-l-4 border-l-brand-amber">
+            <h4 class="font-oswald text-lg text-amber-700 uppercase tracking-wider mb-2">Что такое эрозия?</h4>
+            <p class="font-sans text-slate-600 text-sm leading-relaxed">
+              Эрозия — это процесс разрушения горных пород и почв под действием внешних сил: воды, ветра, льда. В сельском хозяйстве это приводит к потере плодородия и снижению урожаев.
+            </p>
+          </div>
+          <div class="light-pill p-5 rounded-2xl border-l-4 border-l-brand-blue">
+            <h4 class="font-oswald text-lg text-blue-700 uppercase tracking-wider mb-2">Два главных вида</h4>
+            <ul class="font-sans text-slate-600 text-sm space-y-2">
+              <li class="flex items-start gap-2"><span class="text-blue-500 mt-1">💧</span> <strong>Водная:</strong> смыв почвы дождем, талыми водами, потоками рек.</li>
+              <li class="flex items-start gap-2"><span class="text-amber-500 mt-1">💨</span> <strong>Ветровая:</strong> выдувание и перенос частиц пыльными бурями и суховеями.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= PAGE 2: WATER EROSION ================= -->
+    <section id="page-water" class="page-section">
+      <div class="text-center mb-6 relative z-10">
+        <h2 class="font-oswald text-3xl md:text-4xl font-bold uppercase tracking-wide text-brand-blue">Водная эрозия</h2>
+        <p class="font-sans text-slate-600 mt-2 max-w-2xl mx-auto">Самый распространенный вид. Вода размывает почву, образуя овраги и унося плодородный слой.</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 relative z-10">
+        <div class="light-pill p-4 rounded-2xl flex flex-col">
+          <div class="real-image-placeholder h-48 mb-3">
+            <img src="scale_1200.png" alt="Дождь на почве" onerror="this.style.display='none'">
+          </div>
+          <h4 class="font-oswald text-lg text-slate-800 uppercase tracking-wider mb-1">Ливневые дожди</h4>
+          <p class="font-sans text-slate-600 text-sm flex-grow">Капли разрушают структуру почвы, а потоки воды смывают частицы вниз по склону.</p>
+          <div class="mt-2 text-xs font-sans text-slate-500 bg-slate-100 p-2 rounded-lg">
+          </div>
+        </div>
+
+        <div class="light-pill p-4 rounded-2xl flex flex-col">
+          <div class="real-image-placeholder h-48 mb-3">
+            <img src="scale_1300.png" alt="Талые воды" onerror="this.style.display='none'">
+          </div>
+          <h4 class="font-oswald text-lg text-slate-800 uppercase tracking-wider mb-1">Талые воды</h4>
+          <p class="font-sans text-slate-600 text-sm flex-grow">Весной массивные потоки талой воды размывают верхний слой, образуя промоины.</p>
+          <div class="mt-2 text-xs font-sans text-slate-500 bg-slate-100 p-2 rounded-lg">
+          </div>
+        </div>
+
+        <div class="light-pill p-4 rounded-2xl flex flex-col">
+          <div class="real-image-placeholder h-48 mb-3">
+            <img src="scale_1400.png" alt="Размыв берега реки" onerror="this.style.display='none'">
+          </div>
+          <h4 class="font-oswald text-lg text-slate-800 uppercase tracking-wider mb-1">Берега рек</h4>
+          <p class="font-sans text-slate-600 text-sm flex-grow">Боковая эрозия подмывает берега, приводя к обрушению больших участков суши.</p>
+          <div class="mt-2 text-xs font-sans text-slate-500 bg-slate-100 p-2 rounded-lg">
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= PAGE 3: WIND EROSION ================= -->
+    <section id="page-wind" class="page-section">
+      <div class="text-center mb-6 relative z-10">
+        <h2 class="font-oswald text-3xl md:text-4xl font-bold uppercase tracking-wide text-brand-amber">Ветровая эрозия</h2>
+        <p class="font-sans text-slate-600 mt-2 max-w-2xl mx-auto">Также известна как дефляция. Ветер отрывает частицы почвы и переносит их на огромные расстояния.</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 relative z-10">
+        <div class="light-pill p-4 rounded-2xl flex flex-col">
+          <div class="real-image-placeholder h-48 mb-3">
+            <img src="scale_1600.png" alt="Суховей в степи" onerror="this.style.display='none'">
+          </div>
+          <h4 class="font-oswald text-lg text-slate-800 uppercase tracking-wider mb-1">Сухие ветры</h4>
+          <p class="font-sans text-slate-600 text-sm flex-grow">Сильные потоки воздуха выдувают мелкозем и иссушают почву, лишая её влаги.</p>
+          <div class="mt-2 text-xs font-sans text-slate-500 bg-slate-100 p-2 rounded-lg">
+          </div>
+        </div>
+
+        <div class="light-pill p-4 rounded-2xl flex flex-col">
+          <div class="real-image-placeholder h-48 mb-3">
+            <img src="scale_1700.png" alt="Пыльная буря" onerror="this.style.display='none'">
+          </div>
+          <h4 class="font-oswald text-lg text-slate-800 uppercase tracking-wider mb-1">Пыльные бури</h4>
+          <p class="font-sans text-slate-600 text-sm flex-grow">Катастрофические явления, поднимающие тонны пыли в воздух. Уничтожают посевы.</p>
+          <div class="mt-2 text-xs font-sans text-slate-500 bg-slate-100 p-2 rounded-lg">
+          </div>
+        </div>
+
+        <div class="light-pill p-4 rounded-2xl flex flex-col">
+          <div class="real-image-placeholder h-48 mb-3">
+            <img src="scale_1500.png" alt="Открытое поле" onerror="this.style.display='none'">
+          </div>
+          <h4 class="font-oswald text-lg text-slate-800 uppercase tracking-wider mb-1">Распаханные земли</h4>
+          <p class="font-sans text-slate-600 text-sm flex-grow">Отсутствие растительности на полях делает почву беззащитной перед ветром.</p>
+          <div class="mt-2 text-xs font-sans text-slate-500 bg-slate-100 p-2 rounded-lg">
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= PAGE 4: LAB ================= -->
+    <section id="page-lab" class="page-section">
+      
+      <header class="text-center mb-6 border-b border-slate-200/80 pb-5">
+        <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-sky-50 border border-sky-200 text-sky-700 text-sm font-semibold tracking-widest uppercase mb-2">
+          <span>💧</span> Научно-популярный опыт
+        </div>
+        <h1 class="font-oswald text-3xl md:text-5xl font-bold uppercase tracking-wide text-slate-800">
+          Дождь на Склоне: <span class="text-brand-blue">Защита Почвы</span>
+        </h1>
+        <p class="font-sans text-slate-600 text-sm md:text-base mt-2 max-w-2xl mx-auto font-normal">
+          Интерактивное исследование водной эрозии. Сравните смыв открытого грунта и дернового покрытия.
+        </p>
+      </header>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div class="light-pill p-4 rounded-2xl flex flex-col justify-between">
+          <div class="flex justify-between items-center mb-2">
+            <label for="rainSlider" class="font-oswald text-slate-700 text-lg uppercase tracking-wider flex items-center gap-2">
+              <span>🌧️</span> Интенсивность дождя
+            </label>
+            <span id="rainVal" class="font-oswald text-brand-blue text-xl font-bold">60%</span>
+          </div>
+          <input type="range" id="rainSlider" min="10" max="100" value="60" class="w-full cursor-pointer">
+        </div>
+
+        <div class="light-pill p-4 rounded-2xl flex flex-col justify-between">
+          <div class="flex justify-between items-center mb-2">
+            <label for="slopeSlider" class="font-oswald text-slate-700 text-lg uppercase tracking-wider flex items-center gap-2">
+              <span>📐</span> Угол наклона склона
+            </label>
+            <span id="slopeVal" class="font-oswald text-amber-600 text-xl font-bold">15°</span>
+          </div>
+          <input type="range" id="slopeSlider" min="5" max="30" value="15" class="w-full cursor-pointer">
+        </div>
+
+        <div class="light-pill p-3 rounded-2xl flex items-center justify-center gap-2 flex-wrap">
+          <button id="toggleRainBtn" class="btn-sky px-5 py-2.5 rounded-xl font-oswald text-lg font-semibold uppercase tracking-wider transition-all duration-200 active:scale-95 flex items-center gap-2">
+            <span id="rainIcon">💧</span> <span id="rainBtnText">Полить (дождь)</span>
+          </button>
+          <button id="resetBtn" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2.5 rounded-xl font-oswald text-lg uppercase tracking-wider transition-all duration-200 active:scale-95 flex items-center gap-1 border border-slate-300">
+            <span>🔄</span> Сбросить
+          </button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        
+        <div class="light-pill p-4 rounded-2xl flex flex-col items-center relative group">
+          <div class="w-full flex justify-between items-center mb-3">
+            <span class="bg-amber-100 border border-amber-300 text-amber-900 px-3 py-1 rounded-full text-base font-semibold uppercase tracking-wider">
+              🚨 Без растений (Голая почва)
+            </span>
+            <span class="text-xs font-sans text-slate-500 italic hidden sm:inline">Кликните, чтобы сажать траву!</span>
+          </div>
+          
+          <div class="relative w-full aspect-[4/3] max-h-[340px] bg-sky-50 rounded-2xl overflow-hidden">
+            <canvas id="canvasBare" class="w-full h-full cursor-pointer"></canvas>
+          </div>
+
+          <div class="grid grid-cols-3 gap-2 w-full mt-4 text-center font-oswald">
+            <div class="bg-slate-50 p-2 rounded-xl border border-slate-200">
+              <div class="text-xs text-slate-500 uppercase">Эрозия</div>
+              <div id="bareErosionVal" class="text-lg md:text-xl font-bold text-red-600">0%</div>
+            </div>
+            <div class="bg-slate-50 p-2 rounded-xl border border-slate-200">
+              <div class="text-xs text-slate-500 uppercase">Прозрачность</div>
+              <div id="bareTurbidityVal" class="text-lg md:text-xl font-bold text-amber-600">100%</div>
+            </div>
+            <div class="bg-slate-50 p-2 rounded-xl border border-slate-200">
+              <div class="text-xs text-slate-500 uppercase">Сохранность</div>
+              <div id="bareSoilRetainedVal" class="text-lg md:text-xl font-bold text-emerald-600">100%</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="light-pill p-4 rounded-2xl flex flex-col items-center relative">
+          <div class="w-full flex justify-between items-center mb-3">
+            <span class="bg-emerald-100 border border-emerald-300 text-emerald-900 px-3 py-1 rounded-full text-base font-semibold uppercase tracking-wider">
+              🌿 С травой / дёрном
+            </span>
+            <button id="addTreesBtn" class="text-xs btn-emerald px-2.5 py-1 rounded-lg font-oswald uppercase transition">
+              + Деревья
+            </button>
+          </div>
+          
+          <div class="relative w-full aspect-[4/3] max-h-[340px] bg-sky-50 rounded-2xl overflow-hidden">
+            <canvas id="canvasGrass" class="w-full h-full"></canvas>
+          </div>
+
+          <div class="grid grid-cols-3 gap-2 w-full mt-4 text-center font-oswald">
+            <div class="bg-slate-50 p-2 rounded-xl border border-slate-200">
+              <div class="text-xs text-slate-500 uppercase">Эрозия</div>
+              <div id="grassErosionVal" class="text-lg md:text-xl font-bold text-emerald-600">0%</div>
+            </div>
+            <div class="bg-slate-50 p-2 rounded-xl border border-slate-200">
+              <div class="text-xs text-slate-500 uppercase">Прозрачность</div>
+              <div id="grassTurbidityVal" class="text-lg md:text-xl font-bold text-sky-600">100%</div>
+            </div>
+            <div class="bg-slate-50 p-2 rounded-xl border border-slate-200">
+              <div class="text-xs text-slate-500 uppercase">Сохранность</div>
+              <div id="grassSoilRetainedVal" class="text-lg md:text-xl font-bold text-emerald-600">100%</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <div id="conclusionMessage" class="light-pill p-4 rounded-2xl border-l-4 border-l-brand-green flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+          <span class="text-3xl">🌱</span>
+          <div>
+            <h4 class="font-oswald text-brand-green text-lg uppercase tracking-wider font-semibold">Защитная роль растений:</h4>
+            <p class="font-sans text-slate-600 text-sm">
+              Корни дерна переплетают почву, словно сетка. Корневая система удерживает частицы земли от смыва, а стебли и листья замедляют скорость стекания воды.
+            </p>
+          </div>
+        </div>
+        <div class="flex gap-2 font-oswald shrink-0">
+          <span class="inline-flex items-center gap-1.5 text-xs px-3 py-1 rounded-full bg-amber-50 text-amber-900 border border-amber-200">
+            <span class="w-2.5 h-2.5 rounded-full bg-amber-700 inline-block"></span> Грунт
+          </span>
+          <span class="inline-flex items-center gap-1.5 text-xs px-3 py-1 rounded-full bg-emerald-50 text-emerald-900 border border-emerald-200">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-600 inline-block"></span> Трава / Корни
+          </span>
+          <span class="inline-flex items-center gap-1.5 text-xs px-3 py-1 rounded-full bg-sky-50 text-sky-900 border border-sky-200">
+            <span class="w-2.5 h-2.5 rounded-full bg-sky-500 inline-block"></span> Поток
+          </span>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+
+  <script>
+    // ============ TABS ============
+    const navTabs = document.querySelectorAll('.nav-tab');
+    const sections = document.querySelectorAll('.page-section');
+
+    navTabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        navTabs.forEach(t => t.classList.remove('active'));
+        sections.forEach(s => s.classList.remove('active'));
+
+        tab.classList.add('active');
+        const targetId = tab.dataset.target;
+        document.getElementById(targetId).classList.add('active');
+
+        // Пересчёт canvas при переходе в лабораторию
+        if (targetId === 'page-lab') {
+          setTimeout(() => {
+            LabApp.resize();
+            LabApp.restart();
+          }, 60);
+        }
+      });
+    });
+
+    // ============ SIMULATION ============
+    const LabApp = (function() {
+      const canvasBare = document.getElementById('canvasBare');
+      const canvasGrass = document.getElementById('canvasGrass');
+      const ctxBare = canvasBare.getContext('2d');
+      const ctxGrass = canvasGrass.getContext('2d');
+
+      const rainSlider = document.getElementById('rainSlider');
+      const rainVal = document.getElementById('rainVal');
+      const slopeSlider = document.getElementById('slopeSlider');
+      const slopeVal = document.getElementById('slopeVal');
+      const toggleRainBtn = document.getElementById('toggleRainBtn');
+      const rainBtnText = document.getElementById('rainBtnText');
+      const rainIcon = document.getElementById('rainIcon');
+      const resetBtn = document.getElementById('resetBtn');
+      const addTreesBtn = document.getElementById('addTreesBtn');
+
+      const bareErosionVal = document.getElementById('bareErosionVal');
+      const bareTurbidityVal = document.getElementById('bareTurbidityVal');
+      const bareSoilRetainedVal = document.getElementById('bareSoilRetainedVal');
+      
+      const grassErosionVal = document.getElementById('grassErosionVal');
+      const grassTurbidityVal = document.getElementById('grassTurbidityVal');
+      const grassSoilRetainedVal = document.getElementById('grassSoilRetainedVal');
+
+      const V_WIDTH = 500;
+      const V_HEIGHT = 375;
+
+      let isRaining = false;
+      let rainIntensitySetting = parseInt(rainSlider.value);
+      let slopeAngleDegrees = parseInt(slopeSlider.value);
+
+      let bareErosion = 0;
+      let bareMud = 0;
+      let grassErosion = 0;
+      let grassWaterAmount = 0;
+
+      let raindrops = [];
+      let splashes = [];
+      let mudParticles = [];
+      let userPlants = [];
+      let treesCount = 0;
+
+      let frameId = null;
+
+      function getSlopeY(x, angleDeg) {
+        const angleRad = (angleDeg * Math.PI) / 180;
+        const startY = 110;
+        return startY + x * Math.tan(angleRad);
+      }
+
+      function resizeCanvas(canvas) {
+        const rect = canvas.getBoundingClientRect();
+        if (rect.width === 0 || rect.height === 0) return;
+        const dpr = window.devicePixelRatio || 1;
+        canvas.width = Math.round(rect.width * dpr);
+        canvas.height = Math.round(rect.height * dpr);
+      }
+
+      function resize() {
+        resizeCanvas(canvasBare);
+        resizeCanvas(canvasGrass);
+      }
+
+      window.addEventListener('resize', () => {
+        resize();
+      });
+
+      function createRaindrop() {
+        return {
+          x: Math.random() * (V_WIDTH + 100) - 50,
+          y: -20 - Math.random() * 50,
+          speed: 6 + Math.random() * 5 + (rainIntensitySetting / 15),
+          len: 12 + Math.random() * 10,
+          opacity: 0.5 + Math.random() * 0.4
+        };
+      }
+
+      function initRaindrops() {
+        raindrops = [];
+        const count = Math.floor(rainIntensitySetting * 1.5);
+        for (let i = 0; i < count; i++) {
+          const drop = createRaindrop();
+          drop.y = Math.random() * V_HEIGHT;
+          raindrops.push(drop);
+        }
+      }
+
+      function addSplash(x, y, isMuddy) {
+        const count = 3 + Math.floor(Math.random() * 3);
+        for (let i = 0; i < count; i++) {
+          splashes.push({
+            x: x, y: y,
+            vx: (Math.random() - 0.5) * 4,
+            vy: -Math.random() * 3 - 1,
+            life: 1.0,
+            decay: 0.05 + Math.random() * 0.05,
+            isMuddy: isMuddy
+          });
+        }
+      }
+
+      function addMudParticle(startX, startY) {
+        mudParticles.push({
+          x: startX, y: startY,
+          vx: 1 + Math.random() * 2.5 * (slopeAngleDegrees / 15),
+          vy: 0.5 + Math.random() * 1.5,
+          size: 2 + Math.random() * 3,
+          life: 1.0,
+          decay: 0.01 + Math.random() * 0.02
+        });
+      }
+
+      function prepareContext(canvas, ctx) {
+        ctx.save();
+        const scaleX = canvas.width / V_WIDTH;
+        const scaleY = canvas.height / V_HEIGHT;
+        ctx.scale(scaleX, scaleY);
+        ctx.clearRect(0, 0, V_WIDTH, V_HEIGHT);
+      }
+
+      // ---------- BARE TRAY ----------
+      function drawBareTray() {
+        if (canvasBare.width === 0 || canvasBare.height === 0) return;
+        prepareContext(canvasBare, ctxBare);
+
+        const skyGrad = ctxBare.createLinearGradient(0, 0, 0, V_HEIGHT);
+        skyGrad.addColorStop(0, '#e0f2fe');
+        skyGrad.addColorStop(1, '#bae6fd');
+        ctxBare.fillStyle = skyGrad;
+        ctxBare.fillRect(0, 0, V_WIDTH, V_HEIGHT);
+
+        const surfaceYEnd = getSlopeY(V_WIDTH, slopeAngleDegrees);
+
+        ctxBare.beginPath();
+        ctxBare.moveTo(0, getSlopeY(0, slopeAngleDegrees));
+
+        const gullyDepth = (bareErosion / 100) * 30;
+        const steps = 40;
+        for (let i = 0; i <= steps; i++) {
+          const x = (V_WIDTH / steps) * i;
+          let y = getSlopeY(x, slopeAngleDegrees);
+          if (x > V_WIDTH * 0.18 && x < V_WIDTH * 0.95) {
+            const factor = Math.sin(((x - V_WIDTH * 0.18) / (V_WIDTH * 0.77)) * Math.PI);
+            const noise = Math.sin(i * 0.9) * 3 * (bareErosion / 50);
+            y += factor * gullyDepth + noise;
+          }
+          ctxBare.lineTo(x, y);
+        }
+
+        ctxBare.lineTo(V_WIDTH, V_HEIGHT);
+        ctxBare.lineTo(0, V_HEIGHT);
+        ctxBare.closePath();
+
+        const soilGrad = ctxBare.createLinearGradient(0, 100, 0, V_HEIGHT);
+        soilGrad.addColorStop(0, '#a57355');
+        soilGrad.addColorStop(0.5, '#8d5b4c');
+        soilGrad.addColorStop(1, '#683f34');
+        ctxBare.fillStyle = soilGrad;
+        ctxBare.fill();
+
+        ctxBare.fillStyle = '#6b473b';
+        for (let i = 0; i < 16; i++) {
+          const px = (i * 37) % V_WIDTH;
+          const py = getSlopeY(px, slopeAngleDegrees) + 20 + (i * 13) % 75;
+          if (py < V_HEIGHT - 40) {
+            ctxBare.beginPath();
+            ctxBare.arc(px, py, 2.5 + (i % 3), 0, Math.PI * 2);
+            ctxBare.fill();
+          }
+        }
+
+        userPlants.forEach(plant => {
+          const py = getSlopeY(plant.x, slopeAngleDegrees);
+          ctxBare.strokeStyle = '#2e7d32';
+          ctxBare.lineWidth = 2.5;
+          for (let b = -2; b <= 2; b++) {
+            ctxBare.beginPath();
+            ctxBare.moveTo(plant.x, py);
+            ctxBare.lineTo(plant.x + b * 4, py - 12 - Math.abs(b) * 2);
+            ctxBare.stroke();
+          }
+        });
+
+        if (isRaining || bareErosion > 5) {
+          ctxBare.save();
+          const waterAlpha = Math.min(0.85, (bareMud / 100) * 0.8 + 0.2);
+          ctxBare.fillStyle = `rgba(165, 115, 85, ${waterAlpha})`;
+          ctxBare.beginPath();
+          const startX = V_WIDTH * 0.15;
+          ctxBare.moveTo(startX, getSlopeY(startX, slopeAngleDegrees));
+          for (let i = 10; i <= steps; i++) {
+            const x = (V_WIDTH / steps) * i;
+            const y = getSlopeY(x, slopeAngleDegrees) + (bareErosion / 100) * 15;
+            ctxBare.lineTo(x, y + 5);
+          }
+          for (let i = steps; i >= 10; i--) {
+            const x = (V_WIDTH / steps) * i;
+            const y = getSlopeY(x, slopeAngleDegrees);
+            ctxBare.lineTo(x, y);
+          }
+          ctxBare.closePath();
+          ctxBare.fill();
+          ctxBare.restore();
+        }
+
+        const basinY = V_HEIGHT - 45;
+        const mudHeight = (bareMud / 100) * 35;
+        if (mudHeight > 1) {
+          ctxBare.save();
+          const resGrad = ctxBare.createLinearGradient(0, basinY - mudHeight, 0, V_HEIGHT);
+          resGrad.addColorStop(0, 'rgba(180, 130, 95, 0.95)');
+          resGrad.addColorStop(1, 'rgba(130, 85, 55, 0.98)');
+          ctxBare.fillStyle = resGrad;
+          ctxBare.fillRect(0, V_HEIGHT - mudHeight, V_WIDTH, mudHeight);
+          ctxBare.fillStyle = 'rgba(235, 195, 160, 0.4)';
+          ctxBare.fillRect(10, V_HEIGHT - mudHeight + 2, V_WIDTH - 20, 3);
+          ctxBare.restore();
+        }
+
+        mudParticles.forEach(p => {
+          ctxBare.fillStyle = `rgba(135, 85, 55, ${p.life})`;
+          ctxBare.beginPath();
+          ctxBare.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+          ctxBare.fill();
+        });
+
+        drawRainAndSplashes(ctxBare);
+
+        ctxBare.beginPath();
+        ctxBare.moveTo(0, getSlopeY(0, slopeAngleDegrees));
+        ctxBare.lineTo(V_WIDTH, surfaceYEnd);
+        ctxBare.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+        ctxBare.lineWidth = 2;
+        ctxBare.stroke();
+
+        ctxBare.restore();
+      }
+
+      // ---------- GRASS TRAY ----------
+      function drawGrassTray() {
+        if (canvasGrass.width === 0 || canvasGrass.height === 0) return;
+        prepareContext(canvasGrass, ctxGrass);
+
+        const skyGrad = ctxGrass.createLinearGradient(0, 0, 0, V_HEIGHT);
+        skyGrad.addColorStop(0, '#e0f2fe');
+        skyGrad.addColorStop(1, '#bae6fd');
+        ctxGrass.fillStyle = skyGrad;
+        ctxGrass.fillRect(0, 0, V_WIDTH, V_HEIGHT);
+
+        const surfaceYEnd = getSlopeY(V_WIDTH, slopeAngleDegrees);
+
+        ctxGrass.beginPath();
+        ctxGrass.moveTo(0, getSlopeY(0, slopeAngleDegrees));
+        ctxGrass.lineTo(V_WIDTH, surfaceYEnd);
+        ctxGrass.lineTo(V_WIDTH, V_HEIGHT);
+        ctxGrass.lineTo(0, V_HEIGHT);
+        ctxGrass.closePath();
+
+        const soilGrad = ctxGrass.createLinearGradient(0, 100, 0, V_HEIGHT);
+        soilGrad.addColorStop(0, '#8d5b4c');
+        soilGrad.addColorStop(1, '#573328');
+        ctxGrass.fillStyle = soilGrad;
+        ctxGrass.fill();
+
+        ctxGrass.save();
+        ctxGrass.strokeStyle = 'rgba(245, 230, 200, 0.6)';
+        ctxGrass.lineWidth = 1.5;
+        const rootDensity = 38;
+        for (let i = 0; i < rootDensity; i++) {
+          const rx = (V_WIDTH / rootDensity) * i + 5;
+          const ry = getSlopeY(rx, slopeAngleDegrees);
+          ctxGrass.beginPath();
+          ctxGrass.moveTo(rx, ry);
+          ctxGrass.quadraticCurveTo(rx + Math.sin(i) * 12, ry + 20, rx + (i % 2 === 0 ? 14 : -14), ry + 36);
+          ctxGrass.stroke();
+        }
+        ctxGrass.restore();
+
+        const grassBladeCount = 130;
+        for (let i = 0; i < grassBladeCount; i++) {
+          const gx = (V_WIDTH / grassBladeCount) * i;
+          const gy = getSlopeY(gx, slopeAngleDegrees);
+          const height = 14 + Math.sin(i * 0.5) * 6;
+          const bend = Math.sin(i + Date.now() * 0.002) * 4;
+          ctxGrass.beginPath();
+          ctxGrass.moveTo(gx, gy + 1);
+          ctxGrass.quadraticCurveTo(gx + bend, gy - height * 0.6, gx + bend * 1.5, gy - height);
+          ctxGrass.strokeStyle = (i % 3 === 0) ? '#4caf50' : (i % 3 === 1 ? '#2e7d32' : '#66bb6a');
+          ctxGrass.lineWidth = 2.5;
+          ctxGrass.stroke();
+        }
+
+        for (let t = 0; t < treesCount; t++) {
+          const tx = 95 + t * 130;
+          if (tx < V_WIDTH - 40) {
+            const ty = getSlopeY(tx, slopeAngleDegrees);
+            ctxGrass.fillStyle = '#6d4c41';
+            ctxGrass.fillRect(tx - 4, ty - 35, 8, 35);
+            ctxGrass.fillStyle = '#2e7d32';
+            ctxGrass.beginPath();
+            ctxGrass.arc(tx, ty - 45, 20, 0, Math.PI * 2);
+            ctxGrass.fill();
+            ctxGrass.fillStyle = '#4caf50';
+            ctxGrass.beginPath();
+            ctxGrass.arc(tx - 6, ty - 50, 12, 0, Math.PI * 2);
+            ctxGrass.fill();
+          }
+        }
+
+        const basinY = V_HEIGHT - 45;
+        const waterHeight = (grassWaterAmount / 100) * 30;
+        if (waterHeight > 1) {
+          ctxGrass.save();
+          const resGrad = ctxGrass.createLinearGradient(0, basinY - waterHeight, 0, V_HEIGHT);
+          resGrad.addColorStop(0, 'rgba(56, 189, 248, 0.85)');
+          resGrad.addColorStop(1, 'rgba(2, 136, 209, 0.95)');
+          ctxGrass.fillStyle = resGrad;
+          ctxGrass.fillRect(0, V_HEIGHT - waterHeight, V_WIDTH, waterHeight);
+          ctxGrass.fillStyle = 'rgba(255, 255, 255, 0.7)';
+          ctxGrass.fillRect(15, V_HEIGHT - waterHeight + 2, V_WIDTH - 30, 2);
+          ctxGrass.restore();
+        }
+
+        drawRainAndSplashes(ctxGrass);
+
+        ctxGrass.restore();
+      }
+
+      function drawRainAndSplashes(ctx) {
+        if (!isRaining && raindrops.length === 0 && splashes.length === 0) return;
+        ctx.save();
+        ctx.strokeStyle = '#0288d1';
+        ctx.lineWidth = 1.6;
+        raindrops.forEach(d => {
+          ctx.globalAlpha = d.opacity;
+          ctx.beginPath();
+          ctx.moveTo(d.x, d.y);
+          ctx.lineTo(d.x + 2, d.y + d.len);
+          ctx.stroke();
+        });
+        ctx.restore();
+
+        splashes.forEach(s => {
+          ctx.fillStyle = s.isMuddy ? `rgba(165, 115, 85, ${s.life})` : `rgba(56, 189, 248, ${s.life})`;
+          ctx.beginPath();
+          ctx.arc(s.x, s.y, 1.8, 0, Math.PI * 2);
+          ctx.fill();
+        });
+      }
+
+      function tick() {
+        // Обновление физики
+        if (isRaining) {
+          const targetCount = Math.floor(rainIntensitySetting * 1.5);
+          while (raindrops.length < targetCount) raindrops.push(createRaindrop());
+
+          const intensityFactor = rainIntensitySetting / 50;
+          const slopeFactor = Math.tan((slopeAngleDegrees * Math.PI) / 180) / 0.26;
+          const erosionRate = 0.04 * intensityFactor * slopeFactor;
+          const protectionFromUserPlants = Math.min(0.8, userPlants.length * 0.08);
+          const effectiveBareErosionRate = erosionRate * (1 - protectionFromUserPlants);
+
+          bareErosion = Math.min(100, bareErosion + effectiveBareErosionRate);
+          bareMud = Math.min(100, bareMud + effectiveBareErosionRate * 1.2);
+
+          const grassProtection = 0.03 + (treesCount * 0.01);
+          grassErosion = Math.min(10, grassErosion + erosionRate * grassProtection);
+          grassWaterAmount = Math.min(100, grassWaterAmount + 0.15 * intensityFactor);
+
+          if (Math.random() < 0.4 * intensityFactor) {
+            const randX = 50 + Math.random() * (V_WIDTH - 150);
+            addMudParticle(randX, getSlopeY(randX, slopeAngleDegrees));
+          }
+        } else if (raindrops.length > 0) {
+          raindrops.pop();
+        }
+
+        for (let i = raindrops.length - 1; i >= 0; i--) {
+          const d = raindrops[i];
+          d.y += d.speed;
+          d.x += 0.8;
+          const surfaceY = getSlopeY(d.x, slopeAngleDegrees);
+          if (d.y >= surfaceY && d.x >= 0 && d.x <= V_WIDTH) {
+            if (isRaining) { addSplash(d.x, surfaceY, true); raindrops[i] = createRaindrop(); }
+            else raindrops.splice(i, 1);
+          } else if (d.y > V_HEIGHT) {
+            if (isRaining) raindrops[i] = createRaindrop();
+            else raindrops.splice(i, 1);
+          }
+        }
+
+        for (let i = splashes.length - 1; i >= 0; i--) {
+          const s = splashes[i];
+          s.x += s.vx; s.y += s.vy; s.vy += 0.2; s.life -= s.decay;
+          if (s.life <= 0) splashes.splice(i, 1);
+        }
+
+        for (let i = mudParticles.length - 1; i >= 0; i--) {
+          const p = mudParticles[i];
+          p.x += p.vx; p.y += p.vy;
+          const curY = getSlopeY(p.x, slopeAngleDegrees);
+          if (p.y < curY) p.y = curY;
+          p.life -= p.decay;
+          if (p.life <= 0 || p.x > V_WIDTH || p.y > V_HEIGHT - 30) mudParticles.splice(i, 1);
+        }
+
+        drawBareTray();
+        drawGrassTray();
+        updateDashboard();
+
+        frameId = requestAnimationFrame(tick);
+      }
+
+      function updateDashboard() {
+        bareErosionVal.innerText = `${Math.round(bareErosion)}%`;
+        bareTurbidityVal.innerText = `${Math.max(0, 100 - Math.round(bareMud * 1.1))}%`;
+        bareSoilRetainedVal.innerText = `${Math.max(0, 100 - Math.round(bareErosion))}%`;
+
+        grassErosionVal.innerText = `${Math.round(grassErosion)}%`;
+        grassTurbidityVal.innerText = `${Math.max(92, 100 - Math.round(grassErosion * 0.4))}%`;
+        grassSoilRetainedVal.innerText = `${Math.round(100 - grassErosion)}%`;
+      }
+
+      function restart() {
+        if (frameId) cancelAnimationFrame(frameId);
+        tick();
+      }
+
+      // ---- Events ----
+      rainSlider.addEventListener('input', (e) => {
+        rainIntensitySetting = parseInt(e.target.value);
+        rainVal.innerText = `${rainIntensitySetting}%`;
+        if (isRaining) initRaindrops();
+      });
+
+      slopeSlider.addEventListener('input', (e) => {
+        slopeAngleDegrees = parseInt(e.target.value);
+        slopeVal.innerText = `${slopeAngleDegrees}°`;
+      });
+
+      toggleRainBtn.addEventListener('click', () => {
+        isRaining = !isRaining;
+        if (isRaining) {
+          toggleRainBtn.className = 'btn-amber px-5 py-2.5 rounded-xl font-oswald text-lg font-semibold uppercase tracking-wider transition-all duration-200 active:scale-95 flex items-center gap-2';
+          rainBtnText.innerText = 'Пауза';
+          rainIcon.innerText = '⏸';
+          initRaindrops();
+        } else {
+          toggleRainBtn.className = 'btn-sky px-5 py-2.5 rounded-xl font-oswald text-lg font-semibold uppercase tracking-wider transition-all duration-200 active:scale-95 flex items-center gap-2';
+          rainBtnText.innerText = 'Полить (дождь)';
+          rainIcon.innerText = '💧';
+        }
+      });
+
+      resetBtn.addEventListener('click', () => {
+        isRaining = false;
+        toggleRainBtn.className = 'btn-sky px-5 py-2.5 rounded-xl font-oswald text-lg font-semibold uppercase tracking-wider transition-all duration-200 active:scale-95 flex items-center gap-2';
+        rainBtnText.innerText = 'Полить (дождь)';
+        rainIcon.innerText = '💧';
+        bareErosion = 0; bareMud = 0; grassErosion = 0; grassWaterAmount = 0;
+        userPlants = []; treesCount = 0;
+        raindrops = []; splashes = []; mudParticles = [];
+        updateDashboard();
+      });
+
+      addTreesBtn.addEventListener('click', () => {
+        if (treesCount < 3) treesCount++;
+      });
+
+      canvasBare.addEventListener('pointerdown', (e) => {
+        const rect = canvasBare.getBoundingClientRect();
+        if (rect.width === 0) return;
+        const clickX = ((e.clientX - rect.left) / rect.width) * V_WIDTH;
+        if (clickX >= 10 && clickX <= V_WIDTH - 10) userPlants.push({ x: clickX });
+      });
+
+      // ---- Публичный интерфейс ----
+      return {
+        resize: () => {
+          resize();
+        },
+        restart: () => {
+          resize();
+          restart();
+        }
+      };
+    })();
+
+    // Инициализация при загрузке страницы (если лаборатория активна)
+    window.addEventListener('load', () => {
+      if (document.getElementById('page-lab').classList.contains('active')) {
+        setTimeout(() => LabApp.restart(), 100);
+      } else {
+        // Просто резервируем ресайз
+        setTimeout(() => LabApp.resize(), 100);
+      }
+    });
+  </script>
+</body>
+</html>
