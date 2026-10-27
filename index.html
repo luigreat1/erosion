@@ -168,6 +168,83 @@
       border-radius: 0.5rem;
       font-size: 0.85rem;
     }
+
+    /* ===== QUIZ STYLES ===== */
+    .quiz-card {
+      padding: 0.85rem 1rem;
+      border-radius: 0.85rem;
+      font-family: 'Roboto', sans-serif;
+      font-size: 0.95rem;
+      font-weight: 500;
+      cursor: grab;
+      user-select: none;
+      transition: transform 0.15s, box-shadow 0.15s, opacity 0.15s;
+      border: 2px solid #cbd5e1;
+      background: #ffffff;
+      text-align: center;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+      touch-action: none;
+    }
+    .quiz-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 14px rgba(0,0,0,0.1);
+      border-color: #0288d1;
+    }
+    .quiz-card.dragging {
+      opacity: 0.4;
+      cursor: grabbing;
+    }
+    .quiz-card.correct {
+      background: #ecfdf5;
+      border-color: #10b981;
+      color: #065f46;
+    }
+    .quiz-card.wrong {
+      background: #fef2f2;
+      border-color: #ef4444;
+      color: #991b1b;
+      animation: shake 0.35s;
+    }
+    @keyframes shake {
+      0%, 100% { transform: translateX(0); }
+      25% { transform: translateX(-5px); }
+      75% { transform: translateX(5px); }
+    }
+    .dropzone {
+      min-height: 150px;
+      border-radius: 1rem;
+      border: 2px dashed #cbd5e1;
+      padding: 0.75rem;
+      transition: background 0.2s, border-color 0.2s;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    .dropzone.dragover {
+      background: #f0f9ff;
+      border-color: #0288d1;
+    }
+    .dropzone.nature.dragover {
+      background: #ecfdf5;
+      border-color: #10b981;
+    }
+    .dropzone.human.dragover {
+      background: #fffbeb;
+      border-color: #f59e0b;
+    }
+    .dropzone-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.35rem 0.85rem;
+      border-radius: 9999px;
+      font-family: 'Oswald', sans-serif;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-size: 0.85rem;
+      align-self: flex-start;
+    }
   </style>
 </head>
 <body class="p-3 md:p-6 flex flex-col items-center min-h-screen">
@@ -175,7 +252,6 @@
   <div class="light-card max-w-6xl w-full rounded-3xl p-4 md:p-8 my-auto relative overflow-hidden">
     
     <div class="absolute -top-24 -left-24 w-96 h-96 bg-sky-200/40 rounded-full blur-3xl pointer-events-none"></div>
-    <div class="absolute -bottom-24 -right-24 w-96 h-96 bg-emerald-200/40 rounded-full blur-3xl pointer-events-none"></div>
 
     <!-- Navigation -->
     <nav class="flex flex-wrap justify-center gap-2 mb-6 relative z-10">
@@ -183,6 +259,7 @@
       <button class="nav-tab" data-target="page-water">Водная эрозия</button>
       <button class="nav-tab" data-target="page-wind">Ветровая эрозия</button>
       <button class="nav-tab" data-target="page-lab">Лаборатория</button>
+      <button class="nav-tab" data-target="page-quiz">Кто виноват?</button>
     </nav>
 
     <!-- ================= PAGE 1: TITLE ================= -->
@@ -243,8 +320,6 @@
           </div>
           <h4 class="font-oswald text-lg text-slate-800 uppercase tracking-wider mb-1">Ливневые дожди</h4>
           <p class="font-sans text-slate-600 text-sm flex-grow">Капли разрушают структуру почвы, а потоки воды смывают частицы вниз по склону.</p>
-          <div class="mt-2 text-xs font-sans text-slate-500 bg-slate-100 p-2 rounded-lg">
-          </div>
         </div>
 
         <div class="light-pill p-4 rounded-2xl flex flex-col">
@@ -253,8 +328,6 @@
           </div>
           <h4 class="font-oswald text-lg text-slate-800 uppercase tracking-wider mb-1">Талые воды</h4>
           <p class="font-sans text-slate-600 text-sm flex-grow">Весной массивные потоки талой воды размывают верхний слой, образуя промоины.</p>
-          <div class="mt-2 text-xs font-sans text-slate-500 bg-slate-100 p-2 rounded-lg">
-          </div>
         </div>
 
         <div class="light-pill p-4 rounded-2xl flex flex-col">
@@ -263,8 +336,6 @@
           </div>
           <h4 class="font-oswald text-lg text-slate-800 uppercase tracking-wider mb-1">Берега рек</h4>
           <p class="font-sans text-slate-600 text-sm flex-grow">Боковая эрозия подмывает берега, приводя к обрушению больших участков суши.</p>
-          <div class="mt-2 text-xs font-sans text-slate-500 bg-slate-100 p-2 rounded-lg">
-          </div>
         </div>
       </div>
     </section>
@@ -283,8 +354,6 @@
           </div>
           <h4 class="font-oswald text-lg text-slate-800 uppercase tracking-wider mb-1">Сухие ветры</h4>
           <p class="font-sans text-slate-600 text-sm flex-grow">Сильные потоки воздуха выдувают мелкозем и иссушают почву, лишая её влаги.</p>
-          <div class="mt-2 text-xs font-sans text-slate-500 bg-slate-100 p-2 rounded-lg">
-          </div>
         </div>
 
         <div class="light-pill p-4 rounded-2xl flex flex-col">
@@ -293,8 +362,6 @@
           </div>
           <h4 class="font-oswald text-lg text-slate-800 uppercase tracking-wider mb-1">Пыльные бури</h4>
           <p class="font-sans text-slate-600 text-sm flex-grow">Катастрофические явления, поднимающие тонны пыли в воздух. Уничтожают посевы.</p>
-          <div class="mt-2 text-xs font-sans text-slate-500 bg-slate-100 p-2 rounded-lg">
-          </div>
         </div>
 
         <div class="light-pill p-4 rounded-2xl flex flex-col">
@@ -303,8 +370,6 @@
           </div>
           <h4 class="font-oswald text-lg text-slate-800 uppercase tracking-wider mb-1">Распаханные земли</h4>
           <p class="font-sans text-slate-600 text-sm flex-grow">Отсутствие растительности на полях делает почву беззащитной перед ветром.</p>
-          <div class="mt-2 text-xs font-sans text-slate-500 bg-slate-100 p-2 rounded-lg">
-          </div>
         </div>
       </div>
     </section>
@@ -442,6 +507,72 @@
 
     </section>
 
+    <!-- ================= PAGE 5: QUIZ "КТО ВИНОВАТ?" ================= -->
+    <section id="page-quiz" class="page-section">
+      <header class="text-center mb-6 border-b border-slate-200/80 pb-5">
+        <div class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-amber-50 border border-amber-200 text-amber-700 text-sm font-semibold tracking-widest uppercase mb-2">
+          <span>🔍</span> Интерактивное задание
+        </div>
+        <h1 class="font-oswald text-3xl md:text-5xl font-bold uppercase tracking-wide text-slate-800">
+          Кто <span class="text-brand-blue">виноват</span>?
+        </h1>
+        <p class="font-sans text-slate-600 text-sm md:text-base mt-2 max-w-3xl mx-auto font-normal">
+          Перетащите каждую карточку-причину в нужную корзину: <strong>природные</strong> (не зависят от человека) или <strong>человеческие</strong> (связаны с деятельностью людей).
+        </p>
+      </header>
+
+      <!-- Pool -->
+      <div class="light-pill p-4 rounded-2xl mb-4">
+        <div class="flex items-center justify-between mb-3 flex-wrap gap-2">
+          <h3 class="font-oswald text-lg text-slate-700 uppercase tracking-wider flex items-center gap-2">
+            🗂️ Причины эрозии
+          </h3>
+          <span id="quizCounter" class="font-oswald text-sm text-slate-500">Осталось: <strong id="quizRemaining">7</strong> из 7</span>
+        </div>
+        <div id="quizPool" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 min-h-[80px]"></div>
+      </div>
+
+      <!-- Dropzones -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        <!-- Nature -->
+        <div class="light-pill p-4 rounded-2xl">
+          <span class="dropzone-badge bg-emerald-100 text-emerald-800 border border-emerald-300 mb-2">
+            🌿 Природные
+          </span>
+          <div id="zoneNature" class="dropzone nature" data-correct="nature"></div>
+        </div>
+
+        <!-- Human -->
+        <div class="light-pill p-4 rounded-2xl">
+          <span class="dropzone-badge bg-amber-100 text-amber-800 border border-amber-300 mb-2">
+            👷 Человеческие
+          </span>
+          <div id="zoneHuman" class="dropzone human" data-correct="human"></div>
+        </div>
+      </div>
+
+      <!-- Conclusion -->
+      <div id="quizConclusion" class="hidden light-pill p-4 rounded-2xl border-l-4 border-l-brand-green">
+        <div class="flex items-start gap-3">
+          <span class="text-3xl">💡</span>
+          <div>
+            <h4 class="font-oswald text-brand-green text-lg uppercase tracking-wider font-semibold mb-1">Вывод</h4>
+            <p class="font-sans text-slate-700 text-sm leading-relaxed">
+              <strong>Природа создаёт условия</strong> для эрозии (дождь, ветер, рельеф), но <strong>человек ускоряет разрушение в десятки раз</strong>: вырубка лесов, распашка склонов, неумеренный выпас скота и тяжёлая техника разрушают защитный слой почвы. Бережное отношение к земле — главный способ остановить эрозию.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex justify-center mt-4">
+        <button id="quizResetBtn" class="bg-slate-100 hover:bg-slate-200 text-slate-700 px-5 py-2.5 rounded-xl font-oswald text-lg uppercase tracking-wider transition-all duration-200 active:scale-95 flex items-center gap-2 border border-slate-300">
+          <span>🔄</span> Начать заново
+        </button>
+      </div>
+    </section>
+
+    
+
   </div>
 
   <script>
@@ -458,7 +589,6 @@
         const targetId = tab.dataset.target;
         document.getElementById(targetId).classList.add('active');
 
-        // Пересчёт canvas при переходе в лабораторию
         if (targetId === 'page-lab') {
           setTimeout(() => {
             LabApp.resize();
@@ -820,7 +950,6 @@
       }
 
       function tick() {
-        // Обновление физики
         if (isRaining) {
           const targetCount = Math.floor(rainIntensitySetting * 1.5);
           while (raindrops.length < targetCount) raindrops.push(createRaindrop());
@@ -945,24 +1074,105 @@
         if (clickX >= 10 && clickX <= V_WIDTH - 10) userPlants.push({ x: clickX });
       });
 
-      // ---- Публичный интерфейс ----
       return {
-        resize: () => {
-          resize();
-        },
-        restart: () => {
-          resize();
-          restart();
-        }
+        resize: () => { resize(); },
+        restart: () => { resize(); restart(); }
       };
     })();
 
-    // Инициализация при загрузке страницы (если лаборатория активна)
+    // ============ QUIZ "КТО ВИНОВАТ?" ============
+    (function() {
+      const causes = [
+        { id: 'rain',    text: 'Сильный дождь',                            type: 'nature' },
+        { id: 'plough',  text: 'Распашка склонов вдоль склона',            type: 'human'  },
+        { id: 'logging', text: 'Вырубка лесов',                            type: 'human'  },
+        { id: 'grazing', text: 'Выпас скота без нормы',                    type: 'human'  },
+        { id: 'wind',    text: 'Ветер',                                    type: 'nature' },
+        { id: 'bare',    text: 'Отсутствие растений на поле',              type: 'human'  },
+        { id: 'tech',    text: 'Тяжёлая техника, уплотняющая почву',       type: 'human'  }
+      ];
+
+      const pool = document.getElementById('quizPool');
+      const zoneNature = document.getElementById('zoneNature');
+      const zoneHuman = document.getElementById('zoneHuman');
+      const remainingEl = document.getElementById('quizRemaining');
+      const conclusion = document.getElementById('quizConclusion');
+      const resetBtn = document.getElementById('quizResetBtn');
+
+      let placed = 0;
+
+      function buildCard(item) {
+        const el = document.createElement('div');
+        el.className = 'quiz-card';
+        el.draggable = true;
+        el.dataset.type = item.type;
+        el.dataset.id = item.id;
+        el.textContent = item.text;
+        el.addEventListener('dragstart', e => {
+          e.dataTransfer.setData('text/plain', item.id);
+          el.classList.add('dragging');
+        });
+        el.addEventListener('dragend', () => el.classList.remove('dragging'));
+        return el;
+      }
+
+      function resetQuiz() {
+        pool.innerHTML = '';
+        zoneNature.innerHTML = '';
+        zoneHuman.innerHTML = '';
+        placed = 0;
+        remainingEl.textContent = causes.length;
+        conclusion.classList.add('hidden');
+
+        const shuffled = [...causes].sort(() => Math.random() - 0.5);
+        shuffled.forEach(item => pool.appendChild(buildCard(item)));
+      }
+
+      function setupZone(zone) {
+        zone.addEventListener('dragover', e => {
+          e.preventDefault();
+          zone.classList.add('dragover');
+        });
+        zone.addEventListener('dragleave', () => zone.classList.remove('dragover'));
+        zone.addEventListener('drop', e => {
+          e.preventDefault();
+          zone.classList.remove('dragover');
+          const id = e.dataTransfer.getData('text/plain');
+          if (!id) return;
+          const card = document.querySelector(`.quiz-card[data-id="${id}"]`);
+          if (!card) return;
+          const expected = zone.dataset.correct;
+          if (card.dataset.type === expected) {
+            card.classList.remove('wrong');
+            card.classList.add('correct');
+            card.draggable = false;
+            zone.appendChild(card);
+            placed++;
+            remainingEl.textContent = Math.max(0, causes.length - placed);
+            if (placed === causes.length) {
+              conclusion.classList.remove('hidden');
+              conclusion.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+          } else {
+            card.classList.add('wrong');
+            setTimeout(() => card.classList.remove('wrong'), 700);
+          }
+        });
+      }
+
+      setupZone(zoneNature);
+      setupZone(zoneHuman);
+
+      resetBtn.addEventListener('click', resetQuiz);
+
+      resetQuiz();
+    })();
+
+    // Инициализация при загрузке страницы
     window.addEventListener('load', () => {
       if (document.getElementById('page-lab').classList.contains('active')) {
         setTimeout(() => LabApp.restart(), 100);
       } else {
-        // Просто резервируем ресайз
         setTimeout(() => LabApp.resize(), 100);
       }
     });
